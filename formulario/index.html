@@ -33,8 +33,8 @@
         <input type="number" id="edad" required>
       </label>
       <label>Sexo:
-        <input type="checkbox" id="hombre"> Hombre
-        <input type="checkbox" id="mujer"> Mujer
+        <input type="radio" name="sexo" id="hombre" value="Hombre" required> Hombre
+        <input type="radio" name="sexo" id="mujer" value="Mujer" required> Mujer
       </label>
       <label>Grado:
         <select id="grado" required>
@@ -66,7 +66,7 @@
       const edad = document.getElementById("edad").value;
       const hombre = document.getElementById("hombre").checked ? "Hombre" : "";
       const mujer = document.getElementById("mujer").checked ? "Mujer" : "";
-      const sexo = hombre || mujer;
+      const sexo = document.querySelector('input[name="sexo"]:checked')?.value;
       const grado = document.getElementById("grado").value;
 
       if (!nombre || !edad || !sexo || !grado) {
