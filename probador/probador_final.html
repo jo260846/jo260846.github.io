@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probador de Playeras</title>
+
+    <!-- Fabric.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --success-hover: #15803d;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        header a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        header a:hover {
+            text-decoration: underline;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: row;
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 2rem auto;
+            gap: 2rem;
+            padding: 0 1rem;
+        }
+
+        /* --- IZQUIERDA: PLAYERA Y CANVAS --- */
+        .preview-section {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .tshirt-mockup-wrapper {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: transparent;
+        }
+
+        /* Capa 1: Color de fondo recortado según playera.png */
+        .tshirt-color-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            mask-image: url('playera.png');
+            -webkit-mask-image: url('playera.png');
+            mask-size: contain;
+            -webkit-mask-size: contain;
+            mask-repeat: no-repeat;
+            -webkit-mask-repeat: no-repeat;
+            mask-position: center;
+            -webkit-mask-position: center;
+            z-index: 1;
+            transition: background-color 0.3s;
+        }
+
+        /* Capa 2: Canvas Interactivo para Diseños */
+        .canvas-container-custom {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        /* Capa 3: Imagen PNG de la playera para arrugas/sombras */
+        .tshirt-shadow-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            z-index: 3;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+            opacity: 0.9;
+        }
+
+        /* --- DERECHA: PANEL DE CONTROLES --- */
+        .controls-section {
+            width: 380px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        select, input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 0.625rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            outline: none;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        select:focus, input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        .row-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .color-picker {
+            width: 42px;
+            height: 42px;
+            padding: 2px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .btn-bold {
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--border-color);
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .btn-bold.active {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-success { background-color: var(--success); color: white; font-size: 1rem; padding: 0.875rem; }
+        .btn-success:hover { background-color: var(--success-hover); }
+
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: var(--danger-hover); }
+
+        .hint {
+            font-size: 0.8rem;
+            color: #64748b;
+            background-color: #f8fafc;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+
+        @media (max-width: 900px) {
+            .main-container { flex-direction: column; align-items: center; }
+            .controls-section { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>Probador de Playeras</h2>
+        <a href="../index.html">← Volver al sitio principal</a>
+    </header>
+
+    <div class="main-container">
+        <!-- IZQUIERDA: PLAYERA Y CANVAS -->
+        <section class="preview-section">
+            <div class="tshirt-mockup-wrapper">
+                <!-- Capa 1: Color de fondo recortado -->
+                <div class="tshirt-color-layer" id="tshirt-color-layer"></div>
+
+                <!-- Capa 2: Canvas Interactivo Fabric.js -->
+                <div class="canvas-container-custom">
+                    <canvas id="tshirt-canvas" width="500" height="500"></canvas>
+                </div>
+
+                <!-- Capa 3: Imagen PNG de la playera -->
+                <img src="playera.png" id="tshirt-mockup-img" class="tshirt-shadow-overlay" alt="Playera">
+            </div>
+        </section>
+
+        <!-- DERECHA: CONTROLES -->
+        <section class="controls-section">
+            <h3 class="section-title">Personalización</h3>
+
+            <!-- 1. Color de Playera (Gris oscuro/Grafito para permitir ver las sombras en negro) -->
+            <div class="control-group">
+                <label for="tshirt-color">Color de la Playera</label>
+                <select id="tshirt-color">
+                    <option value="#ffffff">Blanco</option>
+                    <option value="#1e1e24">Negro</option>
+                    <option value="#1e3a8a">Azul Marino</option>
+                    <option value="#dc2626">Rojo</option>
+                    <option value="#166534">Verde Obscuro</option>
+                    <option value="#6b7280">Gris</option>
+                    <option value="#f59e0b">Amarillo</option>
+                </select>
+            </div>
+
+            <!-- 2. Añadir Texto -->
+            <div class="control-group">
+                <label for="text-input">Añadir Texto</label>
+                <input type="text" id="text-input" placeholder="Escribe tu texto aquí...">
+                <div class="row-group" style="margin-top: 0.5rem;">
+                    <input type="color" id="text-color" value="#000000" class="color-picker" title="Color del texto">
+                    <button id="btn-bold" class="btn-bold" type="button" title="Negrita (Bold)">B</button>
+                    <button id="btn-add-text" class="btn btn-primary" style="flex: 1;">Añadir Texto</button>
+                </div>
+            </div>
+
+            <!-- 3. Subir Imagen -->
+            <div class="control-group">
+                <label for="image-upload">Subir Logo / Imagen</label>
+                <input type="file" id="image-upload" accept="image/*">
+            </div>
+
+            <div class="hint">
+                💡 Haz clic sobre cualquier elemento para moverlo, girarlo o cambiar su tamaño.
+            </div>
+
+            <!-- 4. Eliminar Elemento -->
+            <button id="btn-delete" class="btn btn-danger">
+                🗑️ Eliminar Seleccionado
+            </button>
+
+            <!-- 5. Descargar Playera Recortada -->
+            <button id="btn-download" class="btn btn-success" style="margin-top: 0.5rem;">
+                📥 Descargar Playera
+            </button>
+        </section>
+    </div>
+
+    <script>
+        const canvas = new fabric.Canvas('tshirt-canvas');
+
+        const tshirtColorSelect = document.getElementById('tshirt-color');
+        const tshirtColorLayer = document.getElementById('tshirt-color-layer');
+        const tshirtMockupImg = document.getElementById('tshirt-mockup-img');
+        const textInput = document.getElementById('text-input');
+        const textColorInput = document.getElementById('text-color');
+        const btnBold = document.getElementById('btn-bold');
+        const btnAddText = document.getElementById('btn-add-text');
+        const imageUpload = document.getElementById('image-upload');
+        const btnDelete = document.getElementById('btn-delete');
+        const btnDownload = document.getElementById('btn-download');
+
+        let isBold = false;
+
+        // 1. Cambiar color de la playera
+        tshirtColorSelect.addEventListener('change', (e) => {
+            tshirtColorLayer.style.backgroundColor = e.target.value;
+        });
+
+        // Toggle Bold
+        btnBold.addEventListener('click', () => {
+            isBold = !isBold;
+            btnBold.classList.toggle('active', isBold);
+
+            const activeObject = canvas.getActiveObject();
+            if (activeObject && activeObject.type === 'textbox') {
+                activeObject.set('fontWeight', isBold ? 'bold' : 'normal');
+                canvas.renderAll();
+            }
+        });
+
+        // Cambiar color de texto en tiempo real
+        textColorInput.addEventListener('input', (e) => {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject && activeObject.type === 'textbox') {
+                activeObject.set('fill', e.target.value);
+                canvas.renderAll();
+            }
+        });
+
+        // 2. Añadir Texto en fuente Arial
+        btnAddText.addEventListener('click', () => {
+            const textValue = textInput.value.trim();
+            if (!textValue) return;
+
+            const text = new fabric.Textbox(textValue, {
+                left: 150,
+                top: 200,
+                width: 150,
+                fontSize: 24,
+                fill: textColorInput.value,
+                fontWeight: isBold ? 'bold' : 'normal',
+                fontFamily: 'Arial',
+                cornerColor: '#2563eb',
+                cornerStyle: 'circle',
+                transparentCorners: false
+            });
+
+            canvas.add(text);
+            canvas.setActiveObject(text);
+            textInput.value = '';
+        });
+
+        // 3. Cargar Imagen con escalado proporcional
+        imageUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const imgObj = new Image();
+                imgObj.src = event.target.result;
+
+                imgObj.onload = () => {
+                    const fabricImage = new fabric.Image(imgObj);
+                    const MAX_SIZE = 160;
+
+                    if (fabricImage.width > MAX_SIZE || fabricImage.height > MAX_SIZE) {
+                        const scale = Math.min(MAX_SIZE / fabricImage.width, MAX_SIZE / fabricImage.height);
+                        fabricImage.scale(scale);
+                    }
+
+                    fabricImage.set({
+                        left: (canvas.width - fabricImage.getScaledWidth()) / 2,
+                        top: 180,
+                        cornerColor: '#2563eb',
+                        cornerStyle: 'circle',
+                        transparentCorners: false
+                    });
+
+                    canvas.add(fabricImage);
+                    canvas.setActiveObject(fabricImage);
+                    imageUpload.value = '';
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 4. Eliminar Elemento Seleccionado
+        btnDelete.addEventListener('click', () => {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                canvas.remove(activeObject);
+                canvas.discardActiveObject();
+                canvas.renderAll();
+            }
+        });
+
+        // Eliminar con tecla Supr / Delete
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (document.activeElement !== textInput) {
+                    const activeObject = canvas.getActiveObject();
+                    if (activeObject && !activeObject.isEditing) {
+                        canvas.remove(activeObject);
+                        canvas.discardActiveObject();
+                        canvas.renderAll();
+                    }
+                }
+            }
+        });
+
+        // 5. DESCARGAR MANTENIENDO LA PROPORCIÓN EXACTA SIN DEFORMAR
+        btnDownload.addEventListener('click', () => {
+            canvas.discardActiveObject();
+            canvas.renderAll();
+
+            // Canvas final cuadrado de 700x700 px
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = 700;
+            exportCanvas.height = 700;
+            const ctx = exportCanvas.getContext('2d');
+
+            // Mantiene el aspecto 450x550 exacto al escalar a 700 px de alto
+            const scale = 700 / 500; // Factor de escala uniforme
+            
+            const fabricDataUrl = canvas.toDataURL({ format: 'png', multiplier: scale });
+            const designImg = new Image();
+
+            designImg.onload = () => {
+                // Paso A: Color de fondo recortado a la silueta de la playera
+                ctx.save();
+                ctx.drawImage(tshirtMockupImg, 0, 0, 700, 700);
+                ctx.globalCompositeOperation = 'source-in';
+                ctx.fillStyle = tshirtColorSelect.value;
+                ctx.fillRect(0, 0, 700, 700);
+                ctx.restore();
+
+                // Paso B: Sombras y arrugas
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.drawImage(tshirtMockupImg, 0, 0, 700, 700);
+                ctx.restore();
+
+                // Paso C: Estampar el diseño escalado uniformemente
+                ctx.drawImage(designImg, 0, 0);
+
+                // Paso D: Descarga automática
+                const link = document.createElement('a');
+                link.download = 'playera-personalizada.png';
+                link.href = exportCanvas.toDataURL('image/png');
+                link.click();
+            };
+
+            designImg.src = fabricDataUrl;
+        });
+    </script>
+</body>
+</html>
