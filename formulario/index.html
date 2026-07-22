@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario de Comentarios</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .hidden { display: none; }
+    form { margin-top: 20px; }
+    label { display: block; margin-top: 10px; }
+    button { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Acceso al Formulario</h1>
+  
+  <!-- Pantalla de contraseña -->
+  <div id="login">
+    <label>Contraseña:
+      <input type="password" id="password">
+    </label>
+    <button onclick="checkPassword()">Entrar</button>
+  </div>
+
+  <!-- Formulario oculto hasta validar contraseña -->
+  <div id="formulario" class="hidden">
+    <h2>Formulario de Comentarios</h2>
+    <form id="comentariosForm">
+      <label>Nombre:
+        <input type="text" id="nombre" required>
+      </label>
+      <label>Edad:
+        <input type="number" id="edad" required>
+      </label>
+      <label>Sexo:
+        <input type="checkbox" id="hombre"> Hombre
+        <input type="checkbox" id="mujer"> Mujer
+      </label>
+      <label>Grado:
+        <select id="grado" required>
+          <option value="">Seleccione...</option>
+          <option value="Primero">Primero</option>
+          <option value="Segundo">Segundo</option>
+          <option value="Tercero">Tercero</option>
+        </select>
+      </label>
+      <button type="button" onclick="guardarCSV()">Guardar</button>
+    </form>
+    <br>
+    <a href="../index.html">← Volver a la página principal</a>
+  </div>
+
+  <script>
+    function checkPassword() {
+      const pass = document.getElementById("password").value;
+      if (pass === "V3r0") {
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("formulario").classList.remove("hidden");
+      } else {
+        alert("Contraseña incorrecta");
+      }
+    }
+
+    function guardarCSV() {
+      const nombre = document.getElementById("nombre").value;
+      const edad = document.getElementById("edad").value;
+      const hombre = document.getElementById("hombre").checked ? "Hombre" : "";
+      const mujer = document.getElementById("mujer").checked ? "Mujer" : "";
+      const sexo = hombre || mujer;
+      const grado = document.getElementById("grado").value;
+
+      if (!nombre || !edad || !sexo || !grado) {
+        alert("Todos los campos son obligatorios");
+        return;
+      }
+
+      const datos = [["Nombre","Edad","Sexo","Grado"], [nombre, edad, sexo, grado]];
+      let csvContent = datos.map(e => e.join(",")).join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "comentarios.csv";
+      link.click();
+    }
+  </script>
+</body>
+</html>
